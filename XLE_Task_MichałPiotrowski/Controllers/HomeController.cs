@@ -22,10 +22,14 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
         public IEnumerable<ToDo> GetDataFromAPI() {
             string response = "";
             using(WebClient client = new()) {
-                response = client.DownloadString("https://jsonplaceholder.typicode.com/todos");
+                response = client.DownloadString("https://countriesnow.space/api/v0.1/countries");
             }
-            var viewModel = JsonConvert.DeserializeObject<IEnumerable<ToDo>>(response);
+            string stringToSearch = "data";
+            int stringToSearchStartIndex = response.IndexOf(stringToSearch)+stringToSearch.Length+2;
+            response = response.Remove(0,stringToSearchStartIndex);
+            response = response.Remove(response.Length - 1);
 
+            var viewModel = JsonConvert.DeserializeObject<IEnumerable<ToDo>>(response);
             return viewModel;
         }
 
