@@ -1,7 +1,15 @@
-﻿@{
+﻿@model IEnumerable<ToDo>
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome! TODO: List, Map</h1>
+    @if(Model is not null) {
+        int index = 0;
+        @foreach(ToDo task in Model) {
+            <p>@index: @task.title</p>
+            index++;
+        }
+    }
 </div>
