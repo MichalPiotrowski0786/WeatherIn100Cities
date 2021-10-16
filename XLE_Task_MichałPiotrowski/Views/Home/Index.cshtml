@@ -1,22 +1,19 @@
-﻿@model IEnumerable<ToDo>
+﻿@model FinalModel
 @{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome! TODO: List, Map</h1>
-    @if(Model is not null) {
-        int index = 0;
-        @foreach(ToDo task in Model) {
-            <h2>@index: @task.country</h2>
-            if(task.cities is not null && task.cities.Length > 0) {
-                int cindex = 0;
-                @foreach(string city in task.cities) {
-                    <p>@cindex: @city</p>
-                    cindex++;
-                }
-            }
-            index++;
-        }
+    @{
+        <p>City: @Model.City</p>
+        <p>Latitude: @Model.Lat</p>
+        <p>Longitude: @Model.Lon</p>
+        <p>Description: @Model.Description</p>
+        <p>Temperature: @Model.Temperature °C | @((Model.Temperature*1.8f + 32f).ToString("N2")) °F</p>
+        <p>Pressure: @Model.Pressure hpa</p>
+        <p>Humidity: @Model.Humidity%</p>
+        <p>Wind Speed: @Model.Wind m/s | @((Model.Wind*3.6f).ToString("N2")) km/h</p>
     }
 </div>
+
