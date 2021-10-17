@@ -1,19 +1,58 @@
-﻿@model FinalModel
+﻿@model IList<FinalModel>
 @{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome! TODO: List, Map</h1>
-    @{
-        <p>City: @Model.City</p>
-        <p>Latitude: @Model.Lat</p>
-        <p>Longitude: @Model.Lon</p>
-        <p>Description: @Model.Description</p>
-        <p>Temperature: @Model.Temperature °C | @((Model.Temperature*1.8f + 32f).ToString("N2")) °F</p>
-        <p>Pressure: @Model.Pressure hpa</p>
-        <p>Humidity: @Model.Humidity%</p>
-        <p>Wind Speed: @Model.Wind m/s | @((Model.Wind*3.6f).ToString("N2")) km/h</p>
-    }
+    <h1 class="display-4">Welcome! Here is list of weather in random hundred cities!</h1>
+    <button class="btn btn-primary btn-lg m-5" asp-controller="Home" asp-action="DataToCSV">Download Data as CSV</button>
+    <table class="table table-striped table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <td>
+                    <strong>Location</strong>
+                </td>
+                <td>
+                    <strong>Description</strong>
+                </td>
+                <td>
+                    <strong>Temperature</strong>
+                </td>
+                <td>
+                    <strong>Pressure</strong>
+                </td>
+                <td>
+                    <strong>Humidity</strong>
+                </td>
+                <td>
+                    <strong>Wind Speed</strong>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(FinalModel fm in Model) {
+                <tr>
+                    <td>
+                        @fm.City, @fm.CountryCode
+                    </td>
+                    <td>
+                        @fm.Description
+                    </td>
+                    <td>
+                        @fm.Temperature °C
+                    </td>
+                    <td>
+                        @fm.Pressure hpa
+                    </td>
+                    <td>
+                        @fm.Humidity%
+                    </td>
+                    <td>
+                        @((fm.Wind * 3.6f).ToString("N2")) km/h
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 

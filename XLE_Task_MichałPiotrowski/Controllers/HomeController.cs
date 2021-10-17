@@ -2,75 +2,79 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StackExchange.Profiling;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Threading.Tasks;
 using XLE_Task_MichałPiotrowski.Models;
 
 namespace XLE_Task_MichałPiotrowski.Controllers {
     public class HomeController : Controller {
         private readonly ILogger<HomeController> _logger;
+        IList<FinalModel> viewModel;
 
         public HomeController(ILogger<HomeController> logger) {
             _logger = logger;
         }
 
-        //public IActionResult Index() {
-        //    return View();
-        //}
-
-        //public ICollection<CountryCitiesModel> GetDataFromCountriesAPI() {
-        //    string response = "";
-        //    using(WebClient client = new()) {
-        //        response = client.DownloadString("https://countriesnow.space/api/v0.1/countries");
-        //    }
-        //    string stringToSearch = "data";
-        //    int stringToSearchStartIndex = response.IndexOf(stringToSearch)+stringToSearch.Length+2;
-        //    response = response.Remove(0,stringToSearchStartIndex);
-        //    response = response.Remove(response.Length - 1);
-
-        //    var viewModel = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(response);
-        //    return viewModel;
-        //}
-
-        public string[] GetDataFromCountriesAPI() {
-            string response = "";
-            using(WebClient client = new()) {
-                response = client.DownloadString("https://countriesnow.space/api/v0.1/countries");
+        public async Task<string> GetDataFromCountriesAPI() {
+            using(WebClient client = new()) { // use WebClient to get response from countries api
+                string link = new("https://countriesnow.space/api/v0.1/countries");
+                try {
+                    var res = await client.DownloadStringTaskAsync(link);
+                    return res;
+                } catch(Exception e) {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                    return null;
+                }
             }
-            string stringToSearch = "data";
-            int stringToSearchStartIndex = response.IndexOf(stringToSearch) + stringToSearch.Length + 2;
-            response = response.Remove(0, stringToSearchStartIndex);
-            response = response.Remove(response.Length - 1);
+        }
 
-            var viewModel = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(response);
+        public string[] DeserializedCountriesResponse(string body) {
+            string stringToSearch = "data"; // search "data" string in response string to locate and prepare JSON 
+            int stringToSearchStartIndex = body.IndexOf(stringToSearch) + stringToSearch.Length + 2;
+            body = body.Remove(0, stringToSearchStartIndex);
+            body = body.Remove(body.Length - 1);
+
+            // deserialize response to ICollection of CountryCitiesModel
+            var viewModel = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(body);
             if(viewModel is not null && viewModel.Count > 0) {
                 List<string> cityList = new();
                 foreach(CountryCitiesModel model in viewModel) {
                     if(model.cities is not null && model.cities.Length > 0) {
                         foreach(string city in model.cities) {
-                            if(cityList is not null) cityList.Add(city);
+                            if(cityList is not null) {
+                                cityList.Add(city);
+                            }
                         }
                     }
                 }
-                if(cityList.Count > 0) {
-                    return cityList.ToArray();
-                } else {
+                if(cityList.Count == 0) {
                     return null;
+                } else {
+                    return cityList.ToArray();
                 }
             } else {
                 return null;
             }
         }
 
-        public FinalModel GetDataFromWeatherAPI(string city) {
-            string response = "";
+        public async Task<FinalModel> GetDataFromWeatherAPI(string city) {
+            string body = "";
+            string link = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=75631f06853d699bf264f477854dd2a9&units=metric";
             using(WebClient client = new()) {
-                response = client.DownloadString($"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=75631f06853d699bf264f477854dd2a9&units=metric");
+                try {
+                    body = await client.DownloadStringTaskAsync(link);
+                } catch(Exception e) {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                    return null;
+                }
             }
             string badResponse = "city not found"; // fix it later to "cod":"404"
-            if(response.Length == 0 || response.Contains(badResponse)) return null;
-            JObject dynamicRes = (JObject)JsonConvert.DeserializeObject(response); // decided to use JObject instead of Model becuase of amount of information that weather api json provides
+            if(body.Length == 0 || body.Contains(badResponse)) return null;
+            JObject dynamicRes = (JObject)JsonConvert.DeserializeObject(body); // decided to use JObject instead of Model becuase of amount of information that weather api json provides
 
             float lat = (float)((JObject)dynamicRes.GetValue("coord")).GetValue("lat");
             float lon = (float)((JObject)dynamicRes.GetValue("coord")).GetValue("lon");
@@ -79,19 +83,46 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             float pressure = (float)((JObject)dynamicRes.GetValue("main")).GetValue("pressure");
             float humidity = (float)((JObject)dynamicRes.GetValue("main")).GetValue("humidity");
             float wind = (float)((JObject)dynamicRes.GetValue("wind")).GetValue("speed");
+            string countryCode = (string)((JObject)dynamicRes.GetValue("sys")).GetValue("country");
 
-            // System.Diagnostics.Debug.WriteLine("!------------------------------: "+dynamicRes.GetValue("coord"));
-            return new FinalModel(city,lat, lon, description, temperature, pressure, humidity, wind);
+            return new FinalModel(city, countryCode,lat, lon, description, temperature, pressure, humidity, wind);
+        }
+
+        public async Task<IList<FinalModel>> GetFinalModelsIList(string[] cities) {
+            //int finalListSize = 100;
+            List<FinalModel> finalModelsList = new();
+            if(cities is null || cities.Length == 0) return null;
+
+            Random rand = new();
+            int counter = 0;
+            while(finalModelsList.Count < 100) {
+                int randomIndex = rand.Next(0, cities.Length - 1);
+                string city = cities[randomIndex];
+
+                var weatherApiResponse = await GetDataFromWeatherAPI(city);
+
+                if(weatherApiResponse is not null) {
+                    finalModelsList.Add(weatherApiResponse);
+                    counter++;
+                }
+            }
+            return finalModelsList;
         }
 
         public IActionResult Index() {
-            //var vm = GetDataFromCountriesAPI();
-            var vm = GetDataFromWeatherAPI("Gdynia");
-            if(vm is not null) {
-                return View(vm);
-            }else {
+            MiniProfiler profiler = MiniProfiler.StartNew();
+            viewModel = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
+            profiler.Stop();
+
+            if(viewModel is not null && viewModel.Count > 0) {
+                return View(viewModel);
+            } else {
                 return RedirectToAction(nameof(Error));
             }
+        }
+
+        public IActionResult DataToCSV() {
+            return View();
         }
 
         public IActionResult Privacy() {
