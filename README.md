@@ -1,5 +1,4 @@
-# XLE_Task
-Task for recruitment purposes
+# Weather in 100 random cities
 
 Main page:
 <p align="center">
