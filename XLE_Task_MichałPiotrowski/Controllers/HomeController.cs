@@ -2,9 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml;
 using StackExchange.Profiling;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
@@ -13,7 +15,6 @@ using XLE_Task_MichałPiotrowski.Models;
 namespace XLE_Task_MichałPiotrowski.Controllers {
     public class HomeController : Controller {
         private readonly ILogger<HomeController> _logger;
-        IList<FinalModel> viewModel;
 
         public HomeController(ILogger<HomeController> logger) {
             _logger = logger;
@@ -39,10 +40,10 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             body = body.Remove(body.Length - 1);
 
             // deserialize response to ICollection of CountryCitiesModel
-            var viewModel = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(body);
-            if(viewModel is not null && viewModel.Count > 0) {
+            var countryModelList = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(body);
+            if(countryModelList is not null && countryModelList.Count > 0) {
                 List<string> cityList = new();
-                foreach(CountryCitiesModel model in viewModel) {
+                foreach(CountryCitiesModel model in countryModelList) {
                     if(model.cities is not null && model.cities.Length > 0) {
                         foreach(string city in model.cities) {
                             if(cityList is not null) {
@@ -88,8 +89,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             return new FinalModel(city, countryCode,lat, lon, description, temperature, pressure, humidity, wind);
         }
 
-        public async Task<IList<FinalModel>> GetFinalModelsIList(string[] cities) {
-            //int finalListSize = 100;
+        public async Task<List<FinalModel>> GetFinalModelsIList(string[] cities) {
             List<FinalModel> finalModelsList = new();
             if(cities is null || cities.Length == 0) return null;
 
@@ -109,31 +109,79 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             return finalModelsList;
         }
 
-        //public ActionResult ExcelExport() {
-        //    System.Diagnostics.Debug.WriteLine("EXCEL");
-        //    using(var package = new ExcelPackage()) {
-        //        var worksheet = package.Workbook.Worksheets.Add("Data");
-
-        //        worksheet.Cells[1, 1].Value = "ID";
-        //        worksheet.Cells[1, 2].Value = "Product";
-        //        worksheet.Cells[1, 3].Value = "Quantity";
-        //        worksheet.Cells[1, 4].Value = "Price";
-        //        worksheet.Cells[1, 5].Value = "Value";
-
-
-        //    }
-        //}
-
         public IActionResult Index() {
+            // run profiler to check how long is response time ps: it's long
             MiniProfiler profiler = MiniProfiler.StartNew();
-            viewModel = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
+            var MainViewModelList = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
             profiler.Stop();
 
-            if(viewModel is not null && viewModel.Count > 0) {
-                return View(viewModel);
+            if(MainViewModelList is not null && MainViewModelList.Count > 0) {
+                try {
+                    // this is so overkill, but works!
+                    TempData["list"] = JsonConvert.SerializeObject(MainViewModelList.ToArray());
+                } catch (Exception e) {
+                    Debug.WriteLine(e.Message);
+                }
+                return View(MainViewModelList);
             } else {
+                // if list of FinalModels is non-existent or empty, return error page
                 return RedirectToAction(nameof(Error));
             }
+        }
+
+        public async Task<FileResult> Download() {
+            FinalModel[] list;
+            if(TempData["list"] is not null) {
+                // deserialize json object and make it array again
+                list = JsonConvert.DeserializeObject<FinalModel[]>(TempData["list"].ToString());
+                Debug.WriteLine(TempData["list"]);
+            } else return null;
+
+            if(list is not null && list.Length > 0) {
+                DataTable Dt = new();
+                Dt.Columns.Add("City", typeof(string));
+                Dt.Columns.Add("Country", typeof(string));
+                Dt.Columns.Add("Description", typeof(string));
+                Dt.Columns.Add("Temperature", typeof(float));
+                Dt.Columns.Add("Pressure", typeof(float));
+                Dt.Columns.Add("Humidity", typeof(float));
+                Dt.Columns.Add("Wind", typeof(float));
+
+                foreach(var data in list) {
+                    DataRow row = Dt.NewRow();
+                    row[0] = data.City;
+                    row[1] = data.CountryCode;
+                    row[2] = data.Description;
+                    row[3] = data.Temperature;
+                    row[4] = data.Pressure;
+                    row[5] = data.Humidity;
+                    row[6] = data.Wind;
+                    Dt.Rows.Add(row);
+                }
+
+                byte[] res;
+                using(ExcelPackage package = new()) {
+                    var sheet = package.Workbook.Worksheets.Add("Sheet0");
+
+                    sheet.Cells.LoadFromDataTable(Dt,true);
+                    sheet.Row(1).Style.Font.Bold = true;
+
+                    res = await package.GetAsByteArrayAsync();
+                }
+
+                // prepare date to use it in file name
+                var date = DateTime.Now.ToString();
+                date = date.Replace(".", string.Empty);
+                date = date.Replace(":", string.Empty);
+                date = date.Replace(" ", "_");
+
+                // System.Diagnostics.Debug.WriteLine(date);
+                string mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                string format = "xlsx";
+                string path = $"WeatherData{date}.{format}";
+
+                return File(res, mime, path);
+            } else return null;
         }
 
         public IActionResult Privacy() {
