@@ -3,6 +3,6 @@ Task for recruitment purposes
 
 <p align="center">
   <kbd>
-    <img src="/src/assets/0.png?raw=true">
+    <img src="/XLE_Task_MichałPiotrowski/Assets/Screenshots/mainpage.png?raw=true">
   </kbd>
 </p>
