@@ -109,6 +109,21 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             return finalModelsList;
         }
 
+        //public ActionResult ExcelExport() {
+        //    System.Diagnostics.Debug.WriteLine("EXCEL");
+        //    using(var package = new ExcelPackage()) {
+        //        var worksheet = package.Workbook.Worksheets.Add("Data");
+
+        //        worksheet.Cells[1, 1].Value = "ID";
+        //        worksheet.Cells[1, 2].Value = "Product";
+        //        worksheet.Cells[1, 3].Value = "Quantity";
+        //        worksheet.Cells[1, 4].Value = "Price";
+        //        worksheet.Cells[1, 5].Value = "Value";
+
+
+        //    }
+        //}
+
         public IActionResult Index() {
             MiniProfiler profiler = MiniProfiler.StartNew();
             viewModel = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
@@ -119,10 +134,6 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             } else {
                 return RedirectToAction(nameof(Error));
             }
-        }
-
-        public IActionResult DataToCSV() {
-            return View();
         }
 
         public IActionResult Privacy() {

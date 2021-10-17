@@ -16,6 +16,7 @@ namespace XLE_Task_MichałPiotrowski {
         public void ConfigureServices(IServiceCollection services) {
             services.AddControllersWithViews();
             services.AddMiniProfiler();
+            services.AddSession();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -29,6 +30,7 @@ namespace XLE_Task_MichałPiotrowski {
             app.UseRouting();
             app.UseAuthorization();
             app.UseMiniProfiler();
+            app.UseSession();
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllerRoute(
