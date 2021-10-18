@@ -52,7 +52,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
         }
 
         public string[] DeserializedCountriesResponse(string body) {
-            string stringToSearch = "data"; // search "data" string in response string to locate and prepare JSON 
+            string stringToSearch = "data"; // search "data" string in response string to locate and prepare JSON for deserialization
             int stringToSearchStartIndex = body.IndexOf(stringToSearch) + stringToSearch.Length + 2;
             body = body.Remove(0, stringToSearchStartIndex);
             body = body.Remove(body.Length - 1);
