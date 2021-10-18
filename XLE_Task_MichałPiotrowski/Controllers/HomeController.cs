@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml;
-using StackExchange.Profiling;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,16 +14,34 @@ using XLE_Task_MichałPiotrowski.Models;
 namespace XLE_Task_MichałPiotrowski.Controllers {
     public class HomeController : Controller {
         private readonly ILogger<HomeController> _logger;
+        const string countryApiLink = "https://countriesnow.space/api/v0.1/countries";
 
         public HomeController(ILogger<HomeController> logger) {
             _logger = logger;
         }
 
-        public async Task<string> GetDataFromCountriesAPI() {
-            using(WebClient client = new()) { // use WebClient to get response from countries api
-                string link = new("https://countriesnow.space/api/v0.1/countries");
+        public IActionResult Index() {
+            var MainViewModelList = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
+
+            if(MainViewModelList is not null && MainViewModelList.Count > 0) {
                 try {
-                    var res = await client.DownloadStringTaskAsync(link);
+                    // return list of FinalModels to TempData, to use it later in downloading etc.
+                    TempData["list"] = JsonConvert.SerializeObject(MainViewModelList.ToArray());
+                } catch(Exception e) {
+                    Debug.WriteLine(e.Message);
+                }
+                return View(MainViewModelList);
+            } else {
+                // if list of FinalModels is non-existent or empty, return error page
+                return RedirectToAction(nameof(Error));
+            }
+        }
+
+        public async Task<string> GetDataFromCountriesAPI() {
+            using(WebClient client = new()) { 
+                // use WebClient to get response from countries api
+                try {
+                    var res = await client.DownloadStringTaskAsync(countryApiLink);
                     return res;
                 } catch(Exception e) {
                     System.Diagnostics.Debug.WriteLine(e.Message);
@@ -64,18 +81,20 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
 
         public async Task<FinalModel> GetDataFromWeatherAPI(string city) {
             string body = "";
-            string link = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=75631f06853d699bf264f477854dd2a9&units=metric";
+            string weatherApiLink = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=75631f06853d699bf264f477854dd2a9&units=metric";
             using(WebClient client = new()) {
                 try {
-                    body = await client.DownloadStringTaskAsync(link);
+                    body = await client.DownloadStringTaskAsync(weatherApiLink);
                 } catch(Exception e) {
                     System.Diagnostics.Debug.WriteLine(e.Message);
                     return null;
                 }
             }
-            string badResponse = "city not found"; // fix it later to "cod":"404"
+            string badResponse = "\"cod\":\"404\"";
             if(body.Length == 0 || body.Contains(badResponse)) return null;
-            JObject dynamicRes = (JObject)JsonConvert.DeserializeObject(body); // decided to use JObject instead of Model becuase of amount of information that weather api json provides
+            // decided to use JObject instead of Model becuase of amount
+            // of information that weather api json provides
+            JObject dynamicRes = (JObject)JsonConvert.DeserializeObject(body);
 
             float lat = (float)((JObject)dynamicRes.GetValue("coord")).GetValue("lat");
             float lon = (float)((JObject)dynamicRes.GetValue("coord")).GetValue("lon");
@@ -100,33 +119,12 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
                 string city = cities[randomIndex];
 
                 var weatherApiResponse = await GetDataFromWeatherAPI(city);
-
                 if(weatherApiResponse is not null) {
                     finalModelsList.Add(weatherApiResponse);
                     counter++;
                 }
             }
             return finalModelsList;
-        }
-
-        public IActionResult Index() {
-            // run profiler to check how long is response time ps: it's long
-            MiniProfiler profiler = MiniProfiler.StartNew();
-            var MainViewModelList = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
-            profiler.Stop();
-
-            if(MainViewModelList is not null && MainViewModelList.Count > 0) {
-                try {
-                    // this is so overkill, but works!
-                    TempData["list"] = JsonConvert.SerializeObject(MainViewModelList.ToArray());
-                } catch (Exception e) {
-                    Debug.WriteLine(e.Message);
-                }
-                return View(MainViewModelList);
-            } else {
-                // if list of FinalModels is non-existent or empty, return error page
-                return RedirectToAction(nameof(Error));
-            }
         }
 
         public async Task<FileResult> Download() {
@@ -178,9 +176,9 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
                 // System.Diagnostics.Debug.WriteLine(date);
                 string mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
                 string format = "xlsx";
-                string path = $"WeatherData{date}.{format}";
+                string name = $"WeatherData{date}.{format}";
 
-                return File(res, mime, path);
+                return File(res, mime, name);
             } else return null;
         }
 
