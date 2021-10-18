@@ -6,3 +6,9 @@ Main page:
     <img src="/XLE_Task_MichałPiotrowski/Assets/Screenshots/mainpage_new.png">
   </kbd>
 </p>
+Excel output:
+<p align="center">
+  <kbd>
+    <img src="/XLE_Task_MichałPiotrowski/Assets/Screenshots/exceldata.png">
+  </kbd>
+</p>
