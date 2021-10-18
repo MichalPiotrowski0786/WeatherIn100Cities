@@ -15,6 +15,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
     public class HomeController : Controller {
         private readonly ILogger<HomeController> _logger;
         const string countryApiLink = "https://countriesnow.space/api/v0.1/countries";
+        protected const string WEATHER_API_KEY = "75631f06853d699bf264f477854dd2a9";
 
         public HomeController(ILogger<HomeController> logger) {
             _logger = logger;
@@ -81,7 +82,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
 
         public async Task<FinalModel> GetDataFromWeatherAPI(string city) {
             string body = "";
-            string weatherApiLink = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid=75631f06853d699bf264f477854dd2a9&units=metric";
+            string weatherApiLink = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric";
             using(WebClient client = new()) {
                 try {
                     body = await client.DownloadStringTaskAsync(weatherApiLink);
