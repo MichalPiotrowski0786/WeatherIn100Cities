@@ -3,6 +3,7 @@
 
 Technologies used:
 
+<p align="center">
 | Technology | Link |
 | :---: | :---: |
 | IDE: Visual Studio | https://visualstudio.microsoft.com |
@@ -20,7 +21,7 @@ Technologies used:
 | 3 | Graphics | Display model data in View | - |
 | 4 | Graphics | Style site elements with Bootstrap | - |
 | 5 | Function | Enable downloading output list as .xlsx file | - |
-
+</p>
 
 Main page:
 <p align="center">
