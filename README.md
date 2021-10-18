@@ -2,9 +2,7 @@
 ## Display and download list of cities and weather in them!
 
 Technologies used:
-
-<p align="center">
-  
+ 
 | Technology | Link |
 | :---: | :---: |
 | IDE: Visual Studio | https://visualstudio.microsoft.com |
@@ -14,6 +12,8 @@ Technologies used:
 | Styling: Bootstrap | https://getbootstrap.com/ |
 | XLSX File Operations: Epplus | https://github.com/EPPlusSoftware/EPPlus |
 
+Functionalities: 
+
 | Id | Category | Name | Description |
 | :---: | :---: | :---: | :---: |
 | 0 | Function | Get data from CountriesNow | https://countriesnow.space/ |
@@ -22,8 +22,6 @@ Technologies used:
 | 3 | Graphics | Display model data in View | - |
 | 4 | Graphics | Style site elements with Bootstrap | - |
 | 5 | Function | Enable downloading output list as .xlsx file | - |
-  
-</p>
 
 Main page:
 <p align="center">
