@@ -1,4 +1,5 @@
 # Weather in 100 random cities
+## Display and download list of cities and weather in them!
 
 Technologies used:
 
