@@ -22,13 +22,14 @@
 | 4 | Graphics | Style site elements with Bootstrap | - |
 | 5 | Function | Enable downloading output list as .xlsx file | - |
 
-Main page:
+## Main page:
 <p align="center">
   <kbd>
     <img src="/XLE_Task_MichałPiotrowski/Assets/Screenshots/mainpage_new.png">
   </kbd>
 </p>
-Excel output:
+
+## Excel output:
 <p align="center">
   <kbd>
     <img src="/XLE_Task_MichałPiotrowski/Assets/Screenshots/exceldata.png">
