@@ -1,7 +1,6 @@
 # Weather in 100 random cities
-## Display and download list of cities and weather in them!
 
-Technologies used:
+## Technologies used:
  
 | Technology | Link |
 | :---: | :---: |
@@ -12,7 +11,7 @@ Technologies used:
 | Styling: Bootstrap | https://getbootstrap.com/ |
 | XLSX File Operations: Epplus | https://github.com/EPPlusSoftware/EPPlus |
 
-Functionalities: 
+## Functionalities: 
 
 | Id | Category | Name | Description |
 | :---: | :---: | :---: | :---: |
