@@ -61,15 +61,16 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             var countryModelList = JsonConvert.DeserializeObject<ICollection<CountryCitiesModel>>(body);
             if(countryModelList is not null && countryModelList.Count > 0) {
                 List<string> cityList = new();
-                foreach(CountryCitiesModel model in countryModelList) {
+                Parallel.ForEach(countryModelList, (model) => {
                     if(model.cities is not null && model.cities.Length > 0) {
-                        foreach(string city in model.cities) {
+                        Parallel.ForEach(model.cities, (city) => {
                             if(cityList is not null) {
                                 cityList.Add(city);
                             }
-                        }
+                        });
                     }
-                }
+                });
+
                 if(cityList.Count == 0) {
                     return null;
                 } else {
@@ -113,20 +114,19 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             List<FinalModel> finalModelsList = new();
             if(cities is null || cities.Length == 0) return null;
 
-            Random rand = new();
-            int requestLimit = 1000;
+            int requestLimit = 1000; // 1000 is safe number for tries
             int successCounter = 0;
             int cityLimit = 100;
+            Random rand = new();
             Parallel.For(0, requestLimit, (e, state) => {
-                if(successCounter > cityLimit) {
-                    state.Break();
+                if(successCounter >= cityLimit) {
+                    state.Break(); // if there are {{ cityLimit }} models added to List, break from loop
                 }
 
                 int randomIndex = rand.Next(0, cities.Length - 1);
                 string city = cities[randomIndex];
 
                 var weatherApiResponse = GetDataFromWeatherAPI(city);
-
                 if(weatherApiResponse is not null) {
                     finalModelsList.Add(weatherApiResponse);
                     successCounter++;
@@ -154,7 +154,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
                 Dt.Columns.Add("Humidity", typeof(float));
                 Dt.Columns.Add("Wind", typeof(float));
 
-                foreach(var data in list) {
+                Parallel.ForEach(list, (data) => {
                     DataRow row = Dt.NewRow();
                     row[0] = data.City;
                     row[1] = data.CountryCode;
@@ -164,7 +164,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
                     row[5] = data.Humidity;
                     row[6] = data.Wind;
                     Dt.Rows.Add(row);
-                }
+                });
 
                 byte[] res;
                 using(ExcelPackage package = new()) {
