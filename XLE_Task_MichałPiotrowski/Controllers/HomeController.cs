@@ -22,7 +22,7 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
         }
 
         public IActionResult Index() {
-            var MainViewModelList = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result)).Result;
+            var MainViewModelList = GetFinalModelsIList(DeserializedCountriesResponse(GetDataFromCountriesAPI().Result));
 
             if(MainViewModelList is not null && MainViewModelList.Count > 0) {
                 try {
@@ -80,12 +80,12 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             }
         }
 
-        public async Task<FinalModel> GetDataFromWeatherAPI(string city) {
+        public FinalModel GetDataFromWeatherAPI(string city) {
             string body = "";
             string weatherApiLink = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric";
             using(WebClient client = new()) {
                 try {
-                    body = await client.DownloadStringTaskAsync(weatherApiLink);
+                    body = client.DownloadString(weatherApiLink);
                 } catch(Exception e) {
                     System.Diagnostics.Debug.WriteLine(e.Message);
                     return null;
@@ -109,22 +109,30 @@ namespace XLE_Task_MichałPiotrowski.Controllers {
             return new FinalModel(city, countryCode,lat, lon, description, temperature, pressure, humidity, wind);
         }
 
-        public async Task<List<FinalModel>> GetFinalModelsIList(string[] cities) {
+        public List<FinalModel> GetFinalModelsIList(string[] cities) {
             List<FinalModel> finalModelsList = new();
             if(cities is null || cities.Length == 0) return null;
 
             Random rand = new();
-            int counter = 0;
-            while(finalModelsList.Count < 100) {
+            int requestLimit = 1000;
+            int successCounter = 0;
+            int cityLimit = 100;
+            Parallel.For(0, requestLimit, (e, state) => {
+                if(successCounter > cityLimit) {
+                    state.Break();
+                }
+
                 int randomIndex = rand.Next(0, cities.Length - 1);
                 string city = cities[randomIndex];
 
-                var weatherApiResponse = await GetDataFromWeatherAPI(city);
+                var weatherApiResponse = GetDataFromWeatherAPI(city);
+
                 if(weatherApiResponse is not null) {
                     finalModelsList.Add(weatherApiResponse);
-                    counter++;
+                    successCounter++;
                 }
-            }
+            });
+
             return finalModelsList;
         }
 
