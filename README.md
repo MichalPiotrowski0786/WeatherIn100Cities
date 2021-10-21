@@ -19,8 +19,8 @@
 | 1 | Function | Get data from OpenWeather| https://openweathermap.org/current |
 | 2 | Function | Process data to use it with Models, Controllers etc. | - |
 | 3 | Graphics | Display model data in View | - |
-| 4 | Graphics | Style site elements with Bootstrap | - |
-| 5 | Function | Enable downloading output list as .xlsx file | - |
+| 4 | Function | Enable downloading output list as .xlsx file | - |
+| 5 | Graphics | Style site elements with Bootstrap | - |
 
 ## Main page:
 <p align="center">
